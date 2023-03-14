@@ -4,6 +4,9 @@
 <head>
   <link rel="stylesheet" href="stylesheet.css">
   <title>MQTO Network Parameters</title>
+  <meta charset="UTF-8">
+  <meta name="author" content="George Hofmann">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <script>
     function submitMessage() {
       alert("Saved value to ESP SPIFFS");
@@ -17,44 +20,37 @@
   <div class="sidebar">
     <a href="index.html">Home</a>
     <a class="active" href="network.html">Network</a>
-    <a href="topics.html">Topics</a>
+    <a href="topics.html">Steppers</a>
     <a href="update/index.html">Update</a>
   </div>
 
   <div class="content">
-    <h2>Assign Network Parameters</h2>
+    <h2>MQTT Parameters</h2>
 
-    <p>Assign all network parameters associated with this locomotive. </p>
+    <p>Assign the following MQTT parameters associated with this locomotive. </p>
 
     <form action="/get">
       <table>
         <tr>
           <th>Item</th>
-          <th>Current Value</th>
-          <th>New Value</th>
-        </tr>
-
-        <tr>
-          <td>SSID </td>
-          <td>%inputSSID%</td>
-          <td><input type="text" name="ssid"></td>
-          <td><input type="submit" value="Submit"></td>
-        </tr>
-
-        <tr>
-          <td>Password </td>
-          <td>%inputpassword%</td>
-          <td><input type="password" name="netpass"></td>
-          <td><input type="submit" value="Submit"></td>
+          <th>Value</th>
         </tr>
 
         <tr>
           <td>MQTT Server IP</td>
-          <td>%inputmqttserver%</td>
-          <td><input type="text" name="mqttserver"></td>
-          <td><input type="submit" value="Submit"></td>
+          <td><input type="text" name="mqttserver" value="%MQTTSERVERIPADR%"></td>
         </tr>
 
+        <tr>
+          <td>Topic Left End</td>
+          <td><input type="text" name="topicleftend" value="%TOPICLEFTEND%"></td>
+        </tr>
+
+        <tr>
+          <td><input type="submit" value="OK"></td>
+        </tr>
+      </table>
+    </form>
   </div>
 
 </body>
