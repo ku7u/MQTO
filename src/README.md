@@ -1,4 +1,7 @@
-# MQTTtosT
+# MQTo
+## What's new
+MQTO is a redo of MQTTtosT redesigned to eliminate the Bluetooth connection. All configuration is now accomplished using the builtin web server. Additional functionality includes automatic wifi provisioning and OTA code and data uploading.
+
 ## Description
 This software provides a means to control track switches (turnouts) on a model railroad. It should be used in conjunction with JMRI software and an MQTT server although the system will work standalone. The software runs on an ESP32 30 pin devkit device.
 

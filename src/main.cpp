@@ -276,12 +276,27 @@ void callback(char *topic, byte *message, unsigned int length)
   }
 }
 
+String processor(const String &var)
+{
+  // Serial.print("in processor: ");Serial.println(var);
+  if (var == "MQTTSERVERIPADR")
+    return mqttServer;
+  else if (var == "TOPICLEFTEND")
+    return topicLeftEnd;
+  return String();
+}
+
 /*****************************************************************************/
 void setup()
 {
 
   Serial.begin(115200);
   SPIFFS.begin(true);
+
+  myPrefs.begin("topics", true);
+  mqttServer = myPrefs.getString("mqttserver", "192.168.99.99");
+  topicLeftEnd = myPrefs.getString("leftEnd", "trains/track/turnout/");
+  myPrefs.end();
 
   // Configure SSID and password for Captive Portal
   String SSID = "Loco_" + String(1);
@@ -356,10 +371,10 @@ void setup()
 
   server.on("/", HTTP_GET, [](AsyncWebServerRequest *request)
             { request->send(SPIFFS, "/index.html", "text/html", false); });
-  server.on("/", HTTP_GET, [](AsyncWebServerRequest *request)
+  server.on("/topics.html", HTTP_GET, [](AsyncWebServerRequest *request)
             { request->send(SPIFFS, "/topics.html", "text/html", false); });
-  server.on("/", HTTP_GET, [](AsyncWebServerRequest *request)
-            { request->send(SPIFFS, "/network.html", "text/html", false); });
+  server.on("/network.html", HTTP_ANY, [](AsyncWebServerRequest *request)
+            { request->send(SPIFFS, "/network.html", "text/html", false, processor); });
   server.on("/", HTTP_GET, [](AsyncWebServerRequest *request)
             { request->send(SPIFFS, "/stylesheet.css", "text/css", false); });
 
@@ -399,7 +414,7 @@ void setup()
               }
               Serial.println(inputMessage);
 
-              request->send(SPIFFS, "/topics.html", "text/html", false); });
+              request->send(SPIFFS, "/network.html", "text/html", false, processor); });
 
   // following from codeproject
   server.serveStatic("/", SPIFFS, "/");
