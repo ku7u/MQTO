@@ -9,22 +9,30 @@ MQTT::MQTT(void)
   // _mqttServer = server;
   // _mqttNodeName = node;
 
-  myPrefs.begin("network", true);
-  _mqttServer = myPrefs.getString("mqttserver", "192.168.0.109");
-  _mqttNodeName = myPrefs.getString("mqttnodename", "TestNode");
-  myPrefs.end();
+  // myPrefs.begin("network", true);
+  // _mqttServer = myPrefs.getString("mqttserver", "192.168.0.254");
+  // _mqttNodeName = myPrefs.getString("mqttnodename", "TestNode");
+  // myPrefs.end();
 
-  // maybe read in the device ids
-  char mqttserver[_mqttServer.length() + 1]; // converting from string to char array required for client parameter
-  strcpy(mqttserver, _mqttServer.c_str());
-  Serial.print("mqttserver ");
-  Serial.println(mqttserver);
-  // uint8_t ip[4];
-  sscanf(mqttserver, "%u.%u.%u.%u", &_ip[0], &_ip[1], &_ip[2], &_ip[3]);
+  // char mqttserver[_mqttServer.length() + 1]; // converting from string to char array required for client parameter
+  // strcpy(mqttserver, _mqttServer.c_str());
+  // sscanf(mqttserver, "%u.%u.%u.%u", &_ip[0], &_ip[1], &_ip[2], &_ip[3]);
 }
 
 void MQTT::connect(PubSubClient *client)
 {
+  // TBD this could be reworked to provide noticing a server ip change
+  Preferences myPrefs;
+
+  myPrefs.begin("general", true);
+  _mqttServer = myPrefs.getString("mqttserver", "192.168.0.254");
+  // _mqttNodeName = myPrefs.getString("mqttnodename", "TestNode");
+  myPrefs.end();
+
+  char mqttserver[_mqttServer.length() + 1]; // converting from string to char array required for client parameter
+  strcpy(mqttserver, _mqttServer.c_str());
+  sscanf(mqttserver, "%u.%u.%u.%u", &_ip[0], &_ip[1], &_ip[2], &_ip[3]);
+
   char mqttnode[_mqttNodeName.length() + 1];
   strcpy(mqttnode, _mqttNodeName.c_str());
   client->setServer(_ip, 1883); // 1883 is the default port on mosquitto server
@@ -43,9 +51,9 @@ void MQTT::connect(PubSubClient *client)
   }
 }
 
-void MQTT::subscribe(PubSubClient* client,  String nodeName)
+void MQTT::subscribe(PubSubClient *client, String nodeName)
 {
-    Preferences myPrefs;
+  Preferences myPrefs;
   char subscription[100];
   String turnoutTopic;
 

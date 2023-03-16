@@ -20,7 +20,7 @@
   <div class="sidebar">
     <a href="index.html">Home</a>
     <a class="active" href="network.html">Network</a>
-    <a href="topics.html">Steppers</a>
+    <a href="steppers.html">Steppers</a>
     <a href="update/index.html">Update</a>
   </div>
 
@@ -30,6 +30,7 @@
     <p>Assign the following MQTT parameters associated with this locomotive. </p>
 
     <form action="/get">
+      <input type="hidden" name="NetworkParm" value="0">
       <table>
         <tr>
           <th>Item</th>
@@ -45,12 +46,9 @@
           <td>Topic Left End</td>
           <td><input type="text" name="topicleftend" value="%TOPICLEFTEND%"></td>
         </tr>
-
-        <tr>
-          <td><input type="submit" value="OK"></td>
-        </tr>
       </table>
-    </form>
+      <input type="submit" value="Submit">   <input type="reset">
+        </form>
   </div>
 
 </body>

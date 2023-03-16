@@ -96,6 +96,13 @@ const char *TOPIC_INPUT_1 = "input1";
 const char *TOPIC_INPUT_2 = "input2";
 const char *TOPIC_INPUT_3 = "input3";
 const char *TOPIC_INPUT_4 = "input4";
+const char *STEPPERPARM = "StepperParm";
+const char *REVERSED = "Reversed";
+// const char *STEPPERNAME = "Name";
+// const char *STEPPERSPEED = "Speed";
+// const char *STEPPERTHROW = "Throw";
+// const char *STEPPERFORCE = "Force";
+// const char *STEPPERREVERSED = "Reversed";
 
 String nodeName;
 
@@ -265,17 +272,17 @@ void callback(char *topic, byte *message, unsigned int length)
       if (strcmp(messChars, "THROWN") == 0)
       {
         myStepper[i].setReady(1);
-        // BTSerial.println("Thrown received");
       }
       if (strcmp(messChars, "CLOSED") == 0)
       {
         myStepper[i].setReady(0);
-        // BTSerial.println("Closed received");
       }
     }
   }
 }
 
+/*****************************************************************************/
+// this function converts placeholders in the html into active data values
 String processor(const String &var)
 {
   // Serial.print("in processor: ");Serial.println(var);
@@ -287,53 +294,86 @@ String processor(const String &var)
 }
 
 /*****************************************************************************/
-void setup()
+// this function converts placeholders in the html into active data values
+String processorParms(const String &var)
 {
-
-  Serial.begin(115200);
-  SPIFFS.begin(true);
-
-  myPrefs.begin("topics", true);
-  mqttServer = myPrefs.getString("mqttserver", "192.168.99.99");
-  topicLeftEnd = myPrefs.getString("leftEnd", "trains/track/turnout/");
-  myPrefs.end();
-
-  // Configure SSID and password for Captive Portal
-  String SSID = "Loco_" + String(1);
-  ESPConnect.autoConnect(SSID.c_str()); // TBD use the actual roadnum
-
-  // Begin connecting to previous WiFi or start autoConnect AP if unable to connect
-  if (ESPConnect.begin(&server))
+  // Serial.println(var);
+  if (var == "STEPPERNAME1")
+    return devName[0];
+  else if (var == "SPEED1")
+    return String(myStepper[0].getSpeed());
+  else if (var == "THROW1")
+    return String(myStepper[0].getStrokeSteps());
+  else if (var == "FORCE1")
+    return String(myStepper[0].getTorqueLimit());
+  else if (var == "REVERSED1")
   {
-    Serial.println("Connected to WiFi");
-    Serial.println("IPAddress: " + WiFi.localIP().toString());
+    if (myStepper[0].getReversed())
+      return ("reversed");
+    else
+      return ("normal");
   }
-  else
+  // else if (var == "CHECKED1")
+  //   {Serial.print(".getReversed = ");Serial.println(myStepper[0].getReversed());
+  //   if (myStepper[0].getReversed())
+  //     return ("true");
+  //   else
+  //     return ("false");
+  //   }
+  else if (var == "STEPPERNAME2")
+    return devName[1];
+  else if (var == "SPEED2")
+    return String(myStepper[1].getSpeed());
+  else if (var == "THROW2")
+    return String(myStepper[1].getStrokeSteps());
+  else if (var == "FORCE2")
+    return String(myStepper[1].getTorqueLimit());
+  else if (var == "REVERSED2")
   {
-    Serial.println("Failed to connect to WiFi");
+    if (myStepper[1].getReversed())
+      return ("on");
+    else
+      return ("off");
   }
 
-  // start neoPixels and set all to blue
-  // neoPixels must be wired in order of devices, first nP is device 1
-  strip.begin();
-  red = strip.gamma32(strip.ColorHSV(0, 200, 70));
-  yellow = strip.gamma32(strip.ColorHSV((65536 / 6) - 1500, 255, 100)); // a little brighter and yellower
-  green = strip.gamma32(strip.ColorHSV(65536 / 3, 200, 70));
-  blue = strip.gamma32(strip.ColorHSV(65536 * 2 / 3, 200, 70));
-  for (int i = 0; i < NUM_DEVICES; i++)
-    strip.setPixelColor(i, blue);
-  strip.show();
+  else if (var == "STEPPERNAME3")
+    return devName[2];
+  else if (var == "SPEED3")
+    return String(myStepper[2].getSpeed());
+  else if (var == "THROW3")
+    return String(myStepper[2].getStrokeSteps());
+  else if (var == "FORCE3")
+    return String(myStepper[2].getTorqueLimit());
+  else if (var == "REVERSED3")
+  {
+    if (myStepper[2].getReversed())
+      return ("on");
+    else
+      return ("off");
+  }
 
-  // get the stored configuration values, defaults are the second parameter in the list
-  myPrefs.begin("general");
-  switchesAvailable = myPrefs.getBool("switchesavailable", false); // check for panel switches in use
-  // nodeName = myPrefs.getString("nodename", "MQTTtosNode");
-  // SSID = myPrefs.getString("SSID", "none");
-  // wifiPassword = myPrefs.getString("wifipassword", "none");
-  // mqttServer = myPrefs.getString("mqttserver", "none");
-  // topicLeftEnd = myPrefs.getString("topicleftend", "trains/track/turnout/");
-  // topicFeedbackLeftEnd = myPrefs.getString("topicfeedbackleftend", "trains/track/sensor/turnout/");
-  myPrefs.end();
+  else if (var == "STEPPERNAME4")
+    return devName[3];
+  else if (var == "SPEED4")
+    return String(myStepper[3].getSpeed());
+  else if (var == "THROW4")
+    return String(myStepper[3].getStrokeSteps());
+  else if (var == "FORCE4")
+    return String(myStepper[3].getTorqueLimit());
+  else if (var == "REVERSED4")
+  {
+    if (myStepper[3].getReversed())
+      return ("on");
+    else
+      return ("off");
+  }
+
+  return String();
+}
+
+/*****************************************************************************/
+void getTurnoutData()
+{
 
   // turnout specific
   // read the stored values for speed, throw, torque and reversed
@@ -343,7 +383,7 @@ void setup()
   {
     myPrefs.begin(deviceSpace[i]);
     devName[i] = myPrefs.getString("name", "noname");
-    Serial.println(devName[i]);
+    // Serial.println(devName[i]);
 
     // set the rotational speed using rpm as parameter, defaults to NOMINAL_SPEED
     myStepper[i].setSpeed(myPrefs.getUShort("speed", NOMINAL_SPEED));
@@ -368,11 +408,55 @@ void setup()
     myStepper[i].setReversed(myPrefs.getBool("reversed", false));
     myPrefs.end();
   }
+}
+/*****************************************************************************/
+void setup()
+{
+
+  Serial.begin(115200);
+  SPIFFS.begin(true);
+
+  // get the stored configuration values, defaults are the second parameter in the list
+  // myPrefs.clear();
+  myPrefs.begin("general", true);
+  mqttServer = myPrefs.getString("mqttserver", "192.168.99.99");
+  topicLeftEnd = myPrefs.getString("leftEnd", "trains/track/turnout/");
+  // topicFeedbackLeftEnd = myPrefs.getString("feedbackleftend", "trains/track/sensor/turnout/");
+  switchesAvailable = myPrefs.getBool("switchesavailable", false); // check for panel switches in use
+  myPrefs.end();
+
+  // Configure SSID and password for Captive Portal
+  String SSID = "MQTO";
+  ESPConnect.autoConnect(SSID.c_str()); // TBD use a distinctive unique name, also what is this?
+
+  // Begin connecting to previous WiFi or start autoConnect AP if unable to connect
+  if (ESPConnect.begin(&server))
+  {
+    Serial.println("Connected to WiFi");
+    Serial.println("IPAddress: " + WiFi.localIP().toString());
+  }
+  else
+  {
+    Serial.println("Failed to connect to WiFi");
+  }
+
+  // start neoPixels and set all to blue
+  // neoPixels must be wired in order of devices, first nP is device 1
+  strip.begin();
+  red = strip.gamma32(strip.ColorHSV(0, 200, 70));
+  yellow = strip.gamma32(strip.ColorHSV((65536 / 6) - 1500, 255, 100)); // a little brighter and yellower
+  green = strip.gamma32(strip.ColorHSV(65536 / 3, 200, 70));
+  blue = strip.gamma32(strip.ColorHSV(65536 * 2 / 3, 200, 70));
+  for (int i = 0; i < NUM_DEVICES; i++)
+    strip.setPixelColor(i, blue);
+  strip.show();
+
+  getTurnoutData();
 
   server.on("/", HTTP_GET, [](AsyncWebServerRequest *request)
             { request->send(SPIFFS, "/index.html", "text/html", false); });
-  server.on("/topics.html", HTTP_GET, [](AsyncWebServerRequest *request)
-            { request->send(SPIFFS, "/topics.html", "text/html", false); });
+  server.on("/steppers.html", HTTP_GET, [](AsyncWebServerRequest *request)
+            { request->send(SPIFFS, "/steppers.html", "text/html", false, processorParms); });
   server.on("/network.html", HTTP_ANY, [](AsyncWebServerRequest *request)
             { request->send(SPIFFS, "/network.html", "text/html", false, processor); });
   server.on("/", HTTP_GET, [](AsyncWebServerRequest *request)
@@ -384,37 +468,71 @@ void setup()
               String inputMessage;
               String inputParam;
               // GET input1 value on <ESP_IP>/get?input1=<inputMessage>
-              if (request->hasParam(TOPIC_INPUT_1))
+              // all stepper forms and only them have this as a hidden element passed as a parameter
+              // the hidden param has a value associated with it that specifies which stepper the form applies to
+              if (request->hasParam(STEPPERPARM))
               {
-                inputMessage = request->getParam(TOPIC_INPUT_1)->value();
-                inputParam = TOPIC_INPUT_1;
-              }
-              // GET input2 value on <ESP_IP>/get?input2=<inputMessage>
-              else if (request->hasParam(TOPIC_INPUT_2))
-              {
-                inputMessage = request->getParam(TOPIC_INPUT_2)->value();
-                inputParam = TOPIC_INPUT_2;
-              }
-              // GET input3 value on <ESP_IP>/get?input3=<inputMessage>
-              else if (request->hasParam(TOPIC_INPUT_3))
-              {
-                inputMessage = request->getParam(TOPIC_INPUT_3)->value();
-                inputParam = TOPIC_INPUT_3;
-              }
-              // GET input4 value on <ESP_IP>/get?input4=<inputMessage>
-              else if (request->hasParam(TOPIC_INPUT_4))
-              {
-                inputMessage = request->getParam(TOPIC_INPUT_4)->value();
-                inputParam = TOPIC_INPUT_4;
-              }              
-              else
-              {
-                inputMessage = "No message sent";
-                inputParam = "none";
-              }
-              Serial.println(inputMessage);
+                int StepperNumber = request->getParam(STEPPERPARM)->value().toInt() - 1;
+                bool mystatus = myPrefs.begin(deviceSpace[StepperNumber], false);
 
-              request->send(SPIFFS, "/network.html", "text/html", false, processor); });
+                myPrefs.putString("name", request->getParam("Name")->value());
+                myPrefs.putUShort("speed", request->getParam("Speed")->value().toInt());
+                myPrefs.putUShort("throw", request->getParam("Throw")->value().toInt());
+                myPrefs.putUShort("force", request->getParam("Force")->value().toInt());
+
+                if (request->hasParam(REVERSED))
+                {
+                  // Serial.println("I saw REVERSED");
+                  myPrefs.putBool("reversed", true);
+                }
+                else
+                {
+                  // Serial.println("I saw off");
+                  myPrefs.putBool("reversed", false);
+                }
+                myPrefs.end();
+                getTurnoutData();
+                request->send(SPIFFS, "/steppers.html", "text/html", false, processorParms);
+              }
+
+              else if (request->hasParam("NetworkParm"))
+              {
+                myPrefs.begin("general", false);
+                mqttServer = request->getParam("mqttserver")->value();
+                myPrefs.putString("mqttserver", mqttServer);
+                topicLeftEnd = request->getParam("topicleftend")->value();
+                myPrefs.putString("leftend", topicLeftEnd);
+                myPrefs.end();
+                request->send(SPIFFS, "/network.html", "text/html", false, processor);
+              }
+
+              // // GET input2 value on <ESP_IP>/get?input2=<inputMessage>
+              // else if (request->hasParam(TOPIC_INPUT_2))
+              // {
+              //   inputMessage = request->getParam(TOPIC_INPUT_2)->value();
+              //   inputParam = TOPIC_INPUT_2;
+              // }
+              // // GET input3 value on <ESP_IP>/get?input3=<inputMessage>
+              // else if (request->hasParam(TOPIC_INPUT_3))
+              // {
+              //   inputMessage = request->getParam(TOPIC_INPUT_3)->value();
+              //   inputParam = TOPIC_INPUT_3;
+              // }
+              // // GET input4 value on <ESP_IP>/get?input4=<inputMessage>
+              // else if (request->hasParam(TOPIC_INPUT_4))
+              // {
+              //   inputMessage = request->getParam(TOPIC_INPUT_4)->value();
+              //   inputParam = TOPIC_INPUT_4;
+              // }
+              // else
+              // {
+              //   inputMessage = "No message sent";
+              //   inputParam = "none";
+              // }
+              // Serial.println(inputMessage);
+
+              // request->send(SPIFFS, "/network.html", "text/html", false, processor);
+            });
 
   // following from codeproject
   server.serveStatic("/", SPIFFS, "/");
@@ -440,12 +558,9 @@ void loop()
 
   mqttClient.loop();
 
-  // if (switchesAvailable)
-  //   checkSwitches();
+  if (switchesAvailable)
+    checkSwitches();
 
-  // if (runSteppers() && returnToMenu) // runSteppers returns true at end of throw, check if throw was commanded from menu
-  // {
-  //   returnToMenu = false; // we came here from the menu 'A' command, return to menu
-  //   configure();          // TBD this is different now
-  // }
+  runSteppers();
+
 }
