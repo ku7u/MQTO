@@ -23,7 +23,7 @@ private:
   String _mqttServer;
   char* _mqttnode;
   IPAddress _ip;
-  Preferences _mqttPreferences;
+  // Preferences _mqttPreferences;
 
 };
 

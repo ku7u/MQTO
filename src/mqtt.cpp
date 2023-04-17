@@ -49,6 +49,8 @@ void MQTT::connect(PubSubClient *client)
     // Wait 1 second before retrying
     delay(1000);
   }
+
+  Serial.println("mqtt connected");
 }
 
 void MQTT::subscribe(PubSubClient *client, String nodeName)
@@ -63,12 +65,11 @@ void MQTT::subscribe(PubSubClient *client, String nodeName)
 
   // // feedback (not a subscription) is of the form trains/track/sensor/turnout/<JMRI system name> ACTIVE/INACTIVE
 
-  myPrefs.begin("topics", true);
-  turnoutTopic = myPrefs.getString("leftEnd", "trains/track/turnout/");
+  myPrefs.begin("general", true);
+  turnoutTopic = myPrefs.getString("leftend", "cmd/mqto/");
   myPrefs.end();
 
-  turnoutTopic = turnoutTopic + nodeName + "/";
-  // turnoutFeedbackTopic = topicFeedbackLeftEnd + nodeName + "/";
+  turnoutTopic = turnoutTopic + nodeName;
 
   strcpy(subscription, turnoutTopic.c_str());
   client->subscribe(subscription, 1);
@@ -93,25 +94,25 @@ void mqttSetup(String mqtt_Server, String iobNode)
 }
 
 /*****************************************************************************/
-void setupSubscriptions(PubSubClient *client, String nodeName)
-{
-  Preferences myPrefs;
-  char subscription[100];
-  String turnoutTopic;
+// void setupSubscriptions(PubSubClient *client, String nodeName)
+// {
+//   Preferences myPrefs;
+//   char subscription[100];
+//   String turnoutTopic;
 
-  // // accept all <topic left end>/<node>/<device> topics
-  // // they will be of the form trains/track/turnout/<JMRI system name> THROWN/CLOSED
-  // // JMRI system name must be nodename + "/" + device name
+//   // // accept all <topic left end>/<node>/<device> topics
+//   // // they will be of the form trains/track/turnout/<JMRI system name> THROWN/CLOSED
+//   // // JMRI system name must be nodename + "/" + device name
 
-  // // feedback (not a subscription) is of the form trains/track/sensor/turnout/<JMRI system name> ACTIVE/INACTIVE
+//   // // feedback (not a subscription) is of the form trains/track/sensor/turnout/<JMRI system name> ACTIVE/INACTIVE
 
-  myPrefs.begin("topics", true);
-  turnoutTopic = myPrefs.getString("leftEnd", "trains/track/turnout/");
-  myPrefs.end();
+//   myPrefs.begin("topics", true);
+//   turnoutTopic = myPrefs.getString("leftend", "trains/track/turnout/");
+//   myPrefs.end();
 
-  turnoutTopic = turnoutTopic + nodeName + "/";
-  // turnoutFeedbackTopic = topicFeedbackLeftEnd + nodeName + "/";
+//   turnoutTopic = turnoutTopic + nodeName + "/";
+//   // turnoutFeedbackTopic = topicFeedbackLeftEnd + nodeName + "/";
 
-  strcpy(subscription, turnoutTopic.c_str());
-  client->subscribe(subscription, 1);
-}
+//   strcpy(subscription, turnoutTopic.c_str());
+//   client->subscribe(subscription, 1);
+// }

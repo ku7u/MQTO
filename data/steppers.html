@@ -34,19 +34,28 @@
         </tr>
         <tr>
           <td>Speed</td>
-          <td><input type="number" name="Speed" value=%SPEED1%></td>
+          <td><input type="number" name="Speed" value=%SPEED1% min="100" max="1000"></td>
         </tr>
         <tr>
           <td>Throw</td>
-          <td> <input type="number" name="Throw" value=%THROW1%></td>
+          <td> <input type="number" name="Throw" value=%THROW1% min="10" max="1000"></td>
         </tr>
         <tr>
-          <td>Force</td>
-          <td> <input type="number" name="Force" value=%FORCE1%></td>
+          <td>Max Force</td>
+          <td> <input type="number" name="Force" value=%FORCE1% min="50" max="100"></td>
         </tr>
-        <tr>
+<!--        <tr>
           <td><label for="cb1">Reversed</label> </td>
           <td> <input type="checkbox" id="cb1" name="Reversed" value="%REVERSED1%"></td>
+        </tr>  -->
+        <tr>
+          <td>Direction (N/R)</td>
+          <td><input type="text" name="Direction" value="%REVERSED1%"></td>
+<!--          <td> <label for="direction">Direction</label></td>
+          <td> <select id="direction" name="Direction" value="%REVERSED1%">
+            <option value="normal" selected>Normal</option>
+            <option value="reversed">Reversed</option>
+          </select></td> -->
         </tr>
       </table>
       <input type="submit" value="Submit">  
@@ -71,11 +80,11 @@
         </tr>
         <tr>
           <td>Force</td>
-          <td> <input type="number" name="Force" value="%FORCE2%"></td>
+          <td> <input type="number" name="Force" value="%FORCE2%" min="50" max="100"></td>
         </tr>
         <tr>
-          <td>Reversed </td>
-          <td> <input type="checkbox" name="Reversed" value="%REVERSED2%"></td>
+          <td>Direction (N/R)</td>
+          <td><input type="text" name="Direction" value="%REVERSED2%"></td>
         </tr>
       </table>
       <input type="submit" value="Submit">   <input type="reset">
@@ -100,11 +109,11 @@
         </tr>
         <tr>
           <td>Force</td>
-          <td> <input type="number" name="Force" value="%FORCE3%"></td>
+          <td> <input type="number" name="Force" value="%FORCE3%" min="50" max="100"></td>
         </tr>
         <tr>
-          <td>Reversed</td>
-          <td> <input type="checkbox" name="Reversed" value="%REVERSED3%"></td>
+          <td>Direction (N/R)</td>
+          <td><input type="text" name="Direction" value="%REVERSED3%"></td>
         </tr>
       </table>
       <input type="submit" value="Submit">   <input type="reset">
@@ -128,11 +137,11 @@
         </tr>
         <tr>
           <td>Force</td>
-          <td> <input type="number" name="Force" value="%FORCE4%"></td>
+          <td> <input type="number" name="Force" value="%FORCE4%" min="50" max="100"></td>
         </tr>
         <tr>
-          <td>Reversed </td>
-          <td> <input type="checkbox" name="Reversed" value="%REVERSED4%"></td>
+          <td>Direction (N/R)</td>
+          <td><input type="text" name="Direction" value="%REVERSED4%"></td>
         </tr>
       </table>
       <input type="submit" value="Submit">   <input type="reset">

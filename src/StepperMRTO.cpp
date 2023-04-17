@@ -44,10 +44,10 @@ StepperMRTO::StepperMRTO(int stepsPerRevolution, int motorAPlus, int motorAMinus
   _currentStep = 0; // which step the motor is on
   _direction = 0;   // motor direction
   _lastCommanded = 0;
-  _lastStepStartTime = 0; // time stamp in us of the start of the last step
+  _lastStepStartTime = 0;                   // time stamp in us of the start of the last step
   _stepsPerRevolution = stepsPerRevolution; // number of steps in one revolution
   _strokeSteps = 500;                       // typical default value for length of stroke
-  _torqueInterval = 1000;                   // value derived empirically, value in usecs - effect is to limit the torque and heat
+  _forceReductionPercent = 100;             // value derived empirically, value in usecs - effect is to limit the torque and heat
   _reversed = false;
   _stepsLeftToGo = 0;
 
@@ -60,7 +60,7 @@ StepperMRTO::StepperMRTO(int stepsPerRevolution, int motorAPlus, int motorAMinus
   // setup the pins on the microcontroller:
   pinMode(_motorAPlus, OUTPUT);
   // pinMode(_motorAMinus, INPUT); // for multiplexing, assures no current flow when not running, set to output in run routine
-  pinMode(_motorAMinus, OUTPUT); 
+  pinMode(_motorAMinus, OUTPUT);
   pinMode(_motorBPlus, OUTPUT);
   // pinMode(_motorBMinus, INPUT); // for multiplexing, assures no current flow when not running, set to output in run routine
   pinMode(_motorBMinus, OUTPUT);
@@ -101,14 +101,15 @@ uint32_t StepperMRTO::getSpeed()
 
 // set the value for torqueInterval if the default value is not optimum
 // limiting the interval controls average current and torque
-void StepperMRTO::setTorqueLimit(unsigned long stepLimit)
+void StepperMRTO::setTorqueLimit(unsigned long maxStepLengthPercent)
 {
-  _torqueInterval = stepLimit;
+  _forceReductionPercent = maxStepLengthPercent;
+  _partialStep = _stepInterval * maxStepLengthPercent / 100.; // CAUTION - this routine must be run after _stepInterval is established
 }
 
 uint32_t StepperMRTO::getTorqueLimit()
 {
-  return _torqueInterval;
+  return _forceReductionPercent;
 }
 
 // set stroke length to override the default value
@@ -122,7 +123,7 @@ uint32_t StepperMRTO::getStrokeSteps()
   return _strokeSteps;
 }
 
-// set last known position to establish default direction
+// set default direction
 void StepperMRTO::setReversed(bool reversed)
 {
   _reversed = reversed;
@@ -159,18 +160,10 @@ bool StepperMRTO::run(void)
       _stepsLeftToGo = _strokeSteps;
       _readyToRun = false;
       _isRunning = true;
-      // esp_timer_init();
-      // _lastStepStartTime = 0;
       _lastStepStartTime = micros();
     }
 
     _now = micros();
-    // _now = (uint32_t) esp_timer_get_time();
-
-    // turn off current before end of step to reduce torque
-    if (_stepInterval  - (_now - _lastStepStartTime) < _torqueInterval)
-      release();
-
 
     // move only if the appropriate delay has passed:
     if ((_now - _lastStepStartTime) >= _stepInterval)
@@ -193,13 +186,13 @@ bool StepperMRTO::run(void)
         {
           _currentStep = _stepsPerRevolution;
         }
-        _currentStep--; 
+        _currentStep--;
       }
 
       // decrement the steps left to go and test for done
       if (--_stepsLeftToGo == 0) // done with the stroke if zero
       {
-        release();  // turn off the juice to reduce overheating
+        release(); // turn off the juice to reduce overheating
         // pinMode(_motorAMinus, INPUT); // for multiplexing, don't want this pin acting as a sink while other coils are active
         // pinMode(_motorBMinus, INPUT); // as above, done with these pins for now
         _isRunning = false;
@@ -209,6 +202,9 @@ bool StepperMRTO::run(void)
       // step the motor to the next of the four steps
       stepMotor(_currentStep % 4);
     }
+    if ((_now - _lastStepStartTime) >= _partialStep)
+      // turn off current before end of step to reduce torque
+      release();
   }
   return false;
 }

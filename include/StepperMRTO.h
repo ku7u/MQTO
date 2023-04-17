@@ -54,7 +54,7 @@ public:
   uint32_t getStrokeSteps();
 
   // limit length of individual step to control torque
-  void setTorqueLimit(unsigned long stepLimit);
+  void setTorqueLimit(unsigned long maxStepLengthPercent);
   uint32_t getTorqueLimit();
 
   // set the default run direction
@@ -82,12 +82,14 @@ public:
 
   int version(void);
 
+  bool stateUnknown = false;
+
 private:
   void stepMotor(int this_step);
 
   bool _direction;          // Direction of rotation
   uint32_t _stepInterval;   // delay between steps, in ms, based on speed
-  uint32_t _torqueInterval; // shortened interval to reduce torque and average current
+  uint32_t _forceReductionPercent; // max allowed step length (percent) to reduce torque and average current
   uint16_t _strokeSteps;    // steps to take in this run
   uint32_t _now;
   uint32_t _lastStepStartTime; // time stamp in us of when the last step was started
@@ -97,6 +99,7 @@ private:
   uint32_t _currentStep; // which step the motor is on
   uint32_t _stepsLeftToGo;
   uint32_t _stepsPerRevolution;
+  float _partialStep;
   int _lastCommanded;
   uint32_t _rpmSpeed;
   bool _reversed;

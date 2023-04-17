@@ -1,0 +1,2 @@
+1. Need to prevent movement if already commanded to the chosen direction
+2. DONE Update the hardcoded reference to turnout name, replace with names from prefs
