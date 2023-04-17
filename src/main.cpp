@@ -66,12 +66,12 @@ ToDo:
 #include "mqtt.h"
 #include <Adafruit_NeoPixel.h>
 #include "StepperMRTO.h"
-#include "oldstuff.h"
+// #include "oldstuff.h"
 // #define testing
 
 using namespace std;
 
-const char *version = "2.2.0";
+// const char *version = "2.2.0";
 
 Preferences myPrefs;
 char *deviceSpace[] = {"d1", "d2", "d3", "d4"};
@@ -79,7 +79,7 @@ char *deviceSpace[] = {"d1", "d2", "d3", "d4"};
 // wifi
 WiFiClient espClient;
 String SSID;
-String wifiPassword;
+// String wifiPassword;
 AsyncWebServer server(80);
 
 // mqtt
@@ -199,11 +199,12 @@ bool runSteppers() // returns true if a throw was completed, false otherwise
 
   for (int i = 0; i < NUM_DEVICES; i++)
   {
+    feedbackTopic = turnoutFeedbackTopic + devName[i];
     if (myStepper[i].getRunState()) // returns false if not in running state
     {
       if (myStepper[i].run()) // true if completed
       {
-        feedbackTopic = turnoutFeedbackTopic + devName[i];
+        myStepper[i].stateUnknown = false;
         if (myStepper[i].getLastCommanded())
         {
           mqttClient.publish(feedbackTopic.c_str(), "ACTIVE");
@@ -227,6 +228,13 @@ bool runSteppers() // returns true if a throw was completed, false otherwise
           strip.setPixelColor(i, 0);
         flasher = !flasher;
         strip.show();
+      }
+      // send the unknown status once
+      // TBD better if the status for all in ready state were set to UNKNOWN
+      if (myStepper[i].stateUnknown == false)
+      {
+        myStepper[i].stateUnknown = true;
+        mqttClient.publish(feedbackTopic.c_str(), "UNKNOWN");
       }
       return false; // if it did run don't try to run any others
     }
@@ -309,17 +317,17 @@ String processorParms(const String &var)
   else if (var == "REVERSED1")
   {
     if (myStepper[0].getReversed())
-      return ("reversed");
+    {
+      // Serial.println("I saw reversed");
+      return ("Reversed");
+    }
     else
-      return ("normal");
+    {
+      // Serial.println("I saw normal");
+      return ("Normal");
+    }
   }
-  // else if (var == "CHECKED1")
-  //   {Serial.print(".getReversed = ");Serial.println(myStepper[0].getReversed());
-  //   if (myStepper[0].getReversed())
-  //     return ("true");
-  //   else
-  //     return ("false");
-  //   }
+
   else if (var == "STEPPERNAME2")
     return devName[1];
   else if (var == "SPEED2")
@@ -331,9 +339,9 @@ String processorParms(const String &var)
   else if (var == "REVERSED2")
   {
     if (myStepper[1].getReversed())
-      return ("on");
+      return ("Reversed");
     else
-      return ("off");
+      return ("Normal");
   }
 
   else if (var == "STEPPERNAME3")
@@ -347,9 +355,9 @@ String processorParms(const String &var)
   else if (var == "REVERSED3")
   {
     if (myStepper[2].getReversed())
-      return ("on");
+      return ("Reversed");
     else
-      return ("off");
+      return ("Normal");
   }
 
   else if (var == "STEPPERNAME4")
@@ -363,12 +371,22 @@ String processorParms(const String &var)
   else if (var == "REVERSED4")
   {
     if (myStepper[3].getReversed())
-      return ("on");
+      return ("Reversed");
     else
-      return ("off");
+      return ("Normal");
   }
-
   return String();
+}
+
+/*****************************************************************************/
+void getGeneralData()
+{
+  myPrefs.begin("general", true);
+  mqttServer = myPrefs.getString("mqttserver", "192.168.0.9");
+  topicLeftEnd = myPrefs.getString("leftEnd", "cmd/mqto/");
+  turnoutFeedbackTopic = myPrefs.getString("feedbackleftend", "tlm/mqto/");
+  switchesAvailable = myPrefs.getBool("switchesavailable", false); // check for panel switches in use
+  myPrefs.end();
 }
 
 /*****************************************************************************/
@@ -418,12 +436,13 @@ void setup()
 
   // get the stored configuration values, defaults are the second parameter in the list
   // myPrefs.clear();
-  myPrefs.begin("general", true);
-  mqttServer = myPrefs.getString("mqttserver", "192.168.99.99");
-  topicLeftEnd = myPrefs.getString("leftEnd", "trains/track/turnout/");
-  // topicFeedbackLeftEnd = myPrefs.getString("feedbackleftend", "trains/track/sensor/turnout/");
-  switchesAvailable = myPrefs.getBool("switchesavailable", false); // check for panel switches in use
-  myPrefs.end();
+  // myPrefs.begin("general", true);
+  // mqttServer = myPrefs.getString("mqttserver", "192.168.0.9");
+  // topicLeftEnd = myPrefs.getString("leftEnd", "cmd/mqto/");
+  // turnoutFeedbackTopic = myPrefs.getString("feedbackleftend", "tlm/mqto/");
+  // switchesAvailable = myPrefs.getBool("switchesavailable", false); // check for panel switches in use
+  // myPrefs.end();
+  getGeneralData();
 
   // Configure SSID and password for Captive Portal
   String SSID = "MQTO";
@@ -432,13 +451,13 @@ void setup()
   // Begin connecting to previous WiFi or start autoConnect AP if unable to connect
   if (ESPConnect.begin(&server))
   {
-    Serial.println("Connected to WiFi");
+    // Serial.println("Connected to WiFi");
     Serial.println("IPAddress: " + WiFi.localIP().toString());
   }
-  else
-  {
-    Serial.println("Failed to connect to WiFi");
-  }
+  // else
+  // {
+  //   Serial.println("Failed to connect to WiFi");
+  // }
 
   // start neoPixels and set all to blue
   // neoPixels must be wired in order of devices, first nP is device 1
@@ -467,29 +486,23 @@ void setup()
             {
               String inputMessage;
               String inputParam;
-              // GET input1 value on <ESP_IP>/get?input1=<inputMessage>
               // all stepper forms and only them have this as a hidden element passed as a parameter
               // the hidden param has a value associated with it that specifies which stepper the form applies to
               if (request->hasParam(STEPPERPARM))
               {
                 int StepperNumber = request->getParam(STEPPERPARM)->value().toInt() - 1;
-                bool mystatus = myPrefs.begin(deviceSpace[StepperNumber], false);
+                myPrefs.begin(deviceSpace[StepperNumber], false);
 
                 myPrefs.putString("name", request->getParam("Name")->value());
                 myPrefs.putUShort("speed", request->getParam("Speed")->value().toInt());
                 myPrefs.putUShort("throw", request->getParam("Throw")->value().toInt());
                 myPrefs.putUShort("force", request->getParam("Force")->value().toInt());
-
-                if (request->hasParam(REVERSED))
-                {
-                  // Serial.println("I saw REVERSED");
-                  myPrefs.putBool("reversed", true);
-                }
-                else
-                {
-                  // Serial.println("I saw off");
+                char myChar = request->getParam("Direction")->value().charAt(0);
+                if ((myChar == 'N') || (myChar == 'n'))
                   myPrefs.putBool("reversed", false);
-                }
+                  else
+                  myPrefs.putBool("reversed", true);
+
                 myPrefs.end();
                 getTurnoutData();
                 request->send(SPIFFS, "/steppers.html", "text/html", false, processorParms);
@@ -503,47 +516,23 @@ void setup()
                 topicLeftEnd = request->getParam("topicleftend")->value();
                 myPrefs.putString("leftend", topicLeftEnd);
                 myPrefs.end();
+                getGeneralData();
                 request->send(SPIFFS, "/network.html", "text/html", false, processor);
-              }
-
-              // // GET input2 value on <ESP_IP>/get?input2=<inputMessage>
-              // else if (request->hasParam(TOPIC_INPUT_2))
-              // {
-              //   inputMessage = request->getParam(TOPIC_INPUT_2)->value();
-              //   inputParam = TOPIC_INPUT_2;
-              // }
-              // // GET input3 value on <ESP_IP>/get?input3=<inputMessage>
-              // else if (request->hasParam(TOPIC_INPUT_3))
-              // {
-              //   inputMessage = request->getParam(TOPIC_INPUT_3)->value();
-              //   inputParam = TOPIC_INPUT_3;
-              // }
-              // // GET input4 value on <ESP_IP>/get?input4=<inputMessage>
-              // else if (request->hasParam(TOPIC_INPUT_4))
-              // {
-              //   inputMessage = request->getParam(TOPIC_INPUT_4)->value();
-              //   inputParam = TOPIC_INPUT_4;
-              // }
-              // else
-              // {
-              //   inputMessage = "No message sent";
-              //   inputParam = "none";
-              // }
-              // Serial.println(inputMessage);
-
-              // request->send(SPIFFS, "/network.html", "text/html", false, processor);
-            });
+              } });
 
   // following from codeproject
   server.serveStatic("/", SPIFFS, "/");
 
-  AsyncElegantOTA.begin(&server); // Start ElegantOTA
+  // Start ElegantOTA
+  AsyncElegantOTA.begin(&server);
   server.begin();
 
   // MQTT
-  // MQTT mqtt;
   mqtt.connect(&mqttClient);
-  mqtt.subscribe(&mqttClient, "WinlockNorthSiding");
+  mqtt.subscribe(&mqttClient, devName[0]);
+  mqtt.subscribe(&mqttClient, devName[1]);
+  mqtt.subscribe(&mqttClient, devName[2]);
+  mqtt.subscribe(&mqttClient, devName[3]);
   mqttClient.setCallback(callback);
 }
 
@@ -562,5 +551,4 @@ void loop()
     checkSwitches();
 
   runSteppers();
-
 }
