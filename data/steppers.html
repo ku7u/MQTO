@@ -3,7 +3,23 @@
 
 <head>
   <link rel="stylesheet" href="stylesheet.css">
-  <title>MQTO Stepper Parameters</title>
+  <style>
+    td
+    {
+      width: 150px;
+    }
+    input[type="text"]
+    {
+      text-align: center;
+      width: 100px;
+    }
+    input[type="number"]
+    {
+      width: 50px;
+      text-align: right;
+    }
+  </style>
+  <title>MQTO Stepper Values</title>
   <meta charset="UTF-8">
   <meta name="author" content="George Hofmann">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -19,47 +35,49 @@
   </div>
 
   <div class="content">
-    <h2>Stepper Parameters</h2>
+    <h2>Stepper Values</h2>
 
     <p>Assign values for each active stepper motor.
-      If there is no turnout connected leave its fields blank.</p>
+      If there is no turnout connected set or leave the Name field blank. An active Name field
+      must contain only lower case letters or numbers with no space characters.</p>
 
     <form action="/get">
       Turnout 1: <br>
       <input type="hidden" name="StepperParm" value="1">
       <table>
-        <tr>
-          <td>Name</td>
-          <td><input type="text" name="Name"  value="%STEPPERNAME1%"></td>
-        </tr>
-        <tr>
-          <td>Speed</td>
-          <td><input type="number" name="Speed" value=%SPEED1% min="100" max="1000"></td>
-        </tr>
-        <tr>
-          <td>Throw</td>
-          <td> <input type="number" name="Throw" value=%THROW1% min="10" max="1000"></td>
-        </tr>
-        <tr>
-          <td>Max Force</td>
-          <td> <input type="number" name="Force" value=%FORCE1% min="50" max="100"></td>
-        </tr>
-<!--        <tr>
+
+          <tr>
+            <td>Name</td>
+            <td><input type="text" name="Name" value="%STEPPERNAME1%" ></td>
+          </tr>
+          <tr>
+            <td>Speed</td>
+            <td><input type="number" name="Speed" value=%SPEED1% min="100" max="1000"></td>
+          </tr>
+          <tr>
+            <td>Throw</td>
+            <td> <input type="number" name="Throw" value=%THROW1% min="10" max="1000"  ></td>
+          </tr>
+          <tr>
+            <td>Force Limit</td>
+            <td> <input type="number" name="Force" value=%FORCE1% min="50" max="100" ></td>
+          </tr>
+          <!--        <tr>
           <td><label for="cb1">Reversed</label> </td>
           <td> <input type="checkbox" id="cb1" name="Reversed" value="%REVERSED1%"></td>
         </tr>  -->
-        <tr>
-          <td>Direction (N/R)</td>
-          <td><input type="text" name="Direction" value="%REVERSED1%"></td>
-<!--          <td> <label for="direction">Direction</label></td>
+          <tr>
+            <td>Direction (N/R)</td>
+            <td><input type="text" name="Direction" value="%REVERSED1%" style="text-align: center;"></td>
+            <!--          <td> <label for="direction">Direction</label></td>
           <td> <select id="direction" name="Direction" value="%REVERSED1%">
             <option value="normal" selected>Normal</option>
             <option value="reversed">Reversed</option>
           </select></td> -->
-        </tr>
+          </tr>
       </table>
-      <input type="submit" value="Submit">  
-      <input type="reset">
+      <input type="submit" value="Submit" width="50px">
+      <input type="reset" width="50px">
     </form><br>
 
     <form action="/get">
@@ -68,7 +86,7 @@
       <table>
         <tr>
           <td>Name</td>
-          <td><input type="text" name="Name"  value="%STEPPERNAME2%"></td>
+          <td><input type="text" name="Name" value="%STEPPERNAME2%"></td>
         </tr>
         <tr>
           <td>Speed</td>
@@ -79,7 +97,7 @@
           <td> <input type="number" name="Throw" value="%THROW2%"></td>
         </tr>
         <tr>
-          <td>Force</td>
+          <td>Force Limit</td>
           <td> <input type="number" name="Force" value="%FORCE2%" min="50" max="100"></td>
         </tr>
         <tr>
@@ -87,7 +105,7 @@
           <td><input type="text" name="Direction" value="%REVERSED2%"></td>
         </tr>
       </table>
-      <input type="submit" value="Submit">   <input type="reset">
+      <input type="submit" value="Submit"> <input type="reset">
     </form><br>
 
 
@@ -97,7 +115,7 @@
       <table>
         <tr>
           <td>Name</td>
-          <td><input type="text" name="Name"  value="%STEPPERNAME3%"></td>
+          <td><input type="text" name="Name" value="%STEPPERNAME3%"></td>
         </tr>
         <tr>
           <td>Speed</td>
@@ -108,7 +126,7 @@
           <td> <input type="number" name="Throw" value="%THROW3%"></td>
         </tr>
         <tr>
-          <td>Force</td>
+          <td>Force Limit</td>
           <td> <input type="number" name="Force" value="%FORCE3%" min="50" max="100"></td>
         </tr>
         <tr>
@@ -116,7 +134,7 @@
           <td><input type="text" name="Direction" value="%REVERSED3%"></td>
         </tr>
       </table>
-      <input type="submit" value="Submit">   <input type="reset">
+      <input type="submit" value="Submit"> <input type="reset">
     </form><br>
 
     <form action="/get">
@@ -125,7 +143,7 @@
       <table>
         <tr>
           <td>Name</td>
-          <td><input type="text" name="Name"  value="%STEPPERNAME4%"></td>
+          <td><input type="text" name="Name" value="%STEPPERNAME4%"></td>
         </tr>
         <tr>
           <td>Speed</td>
@@ -136,7 +154,7 @@
           <td> <input type="number" name="Throw" value="%THROW4%"></td>
         </tr>
         <tr>
-          <td>Force</td>
+          <td>Force Limit</td>
           <td> <input type="number" name="Force" value="%FORCE4%" min="50" max="100"></td>
         </tr>
         <tr>
@@ -144,9 +162,8 @@
           <td><input type="text" name="Direction" value="%REVERSED4%"></td>
         </tr>
       </table>
-      <input type="submit" value="Submit">   <input type="reset">
+      <input type="submit" value="Submit"> <input type="reset">
     </form><br>
-
   </div>
 
 </body>

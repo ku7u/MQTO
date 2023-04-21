@@ -33,7 +33,6 @@
 
 #include "StepperMRTO.h"
 #include <esp_timer.h>
-#include "routines.h"
 
 // Constructor, sets the number of steps per revolution and the pin connections to the windings
 StepperMRTO::StepperMRTO(int stepsPerRevolution, int motorAPlus, int motorAMinus,

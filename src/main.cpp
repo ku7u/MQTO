@@ -29,7 +29,7 @@ ToDo:
    02
    03  RX0
    04  GPIO reserved for neopixel output
-   05  switch for configuration via bluetooth
+   05
    12  A+ stepper 1
    13  A- stepper 1
    14  B+ stepper 1
@@ -66,7 +66,6 @@ ToDo:
 #include "mqtt.h"
 #include <Adafruit_NeoPixel.h>
 #include "StepperMRTO.h"
-// #include "oldstuff.h"
 // #define testing
 
 using namespace std;
@@ -87,9 +86,7 @@ MQTT mqtt;
 String mqttServer;
 String mqttNode;
 String topicLeftEnd;
-String topicFeedbackLeftEnd;
-String turnoutTopic;
-String turnoutFeedbackTopic;
+String feedbackLeftEnd;
 PubSubClient mqttClient(espClient);
 
 const char *TOPIC_INPUT_1 = "input1";
@@ -98,11 +95,6 @@ const char *TOPIC_INPUT_3 = "input3";
 const char *TOPIC_INPUT_4 = "input4";
 const char *STEPPERPARM = "StepperParm";
 const char *REVERSED = "Reversed";
-// const char *STEPPERNAME = "Name";
-// const char *STEPPERSPEED = "Speed";
-// const char *STEPPERTHROW = "Throw";
-// const char *STEPPERFORCE = "Force";
-// const char *STEPPERREVERSED = "Reversed";
 
 String nodeName;
 
@@ -112,7 +104,7 @@ String devName[NUM_DEVICES];
 uint16_t const STEPS_PER_REVOLUTION = 20; // number of steps per revolution
 uint16_t const NOMINAL_SPEED = 1000;
 uint16_t const NOMINAL_STROKE = 500;
-uint16_t const NOMINAL_TORQUE_INTERVAL = 500;
+uint16_t const NOMINAL_MAX_TORQUE = 100;
 
 // motor pins
 uint16_t const APlus1Pin = 12;
@@ -160,8 +152,16 @@ uint32_t lastFlashTime; // for flasher
 
 Adafruit_NeoPixel strip(LED_COUNT, LED_PIN, NEO_GRB + NEO_KHZ800);
 
-uint32_t testTimer;
-uint32_t testCounter;
+
+/*****************************************************************************/
+void setSubscriptions()
+{
+    mqtt.subscribe(&mqttClient, devName[0]);
+  mqtt.subscribe(&mqttClient, devName[1]);
+  mqtt.subscribe(&mqttClient, devName[2]);
+  mqtt.subscribe(&mqttClient, devName[3]);
+}
+
 
 /*****************************************************************************/
 // each push of a switch activaates the device to move in direction opposite to last commanded
@@ -199,7 +199,7 @@ bool runSteppers() // returns true if a throw was completed, false otherwise
 
   for (int i = 0; i < NUM_DEVICES; i++)
   {
-    feedbackTopic = turnoutFeedbackTopic + devName[i];
+    feedbackTopic = feedbackLeftEnd + devName[i];
     if (myStepper[i].getRunState()) // returns false if not in running state
     {
       if (myStepper[i].run()) // true if completed
@@ -278,13 +278,9 @@ void callback(char *topic, byte *message, unsigned int length)
     if (lastPart.equals(devName[i]))
     {
       if (strcmp(messChars, "THROWN") == 0)
-      {
         myStepper[i].setReady(1);
-      }
       if (strcmp(messChars, "CLOSED") == 0)
-      {
         myStepper[i].setReady(0);
-      }
     }
   }
 }
@@ -294,10 +290,18 @@ void callback(char *topic, byte *message, unsigned int length)
 String processor(const String &var)
 {
   // Serial.print("in processor: ");Serial.println(var);
-  if (var == "MQTTSERVERIPADR")
+  if (var == "SSID")
+    return WiFi.SSID();
+  else if (var == "RSSI")
+    return String(WiFi.RSSI());
+  else if (var == "MAC")
+    return WiFi.macAddress();
+  else if (var == "MQTTSERVERIPADR")
     return mqttServer;
   else if (var == "TOPICLEFTEND")
     return topicLeftEnd;
+  else if (var == "FEEDBACKLEFTEND")
+    return feedbackLeftEnd;
   return String();
 }
 
@@ -380,11 +384,12 @@ String processorParms(const String &var)
 
 /*****************************************************************************/
 void getGeneralData()
+// get the stored configuration values, defaults are the second parameter in the list
 {
   myPrefs.begin("general", true);
-  mqttServer = myPrefs.getString("mqttserver", "192.168.0.9");
-  topicLeftEnd = myPrefs.getString("leftEnd", "cmd/mqto/");
-  turnoutFeedbackTopic = myPrefs.getString("feedbackleftend", "tlm/mqto/");
+  mqttServer = myPrefs.getString("mqttserver", "192.168.0.254");
+  topicLeftEnd = myPrefs.getString("leftend", "cmd/mqto/");
+  feedbackLeftEnd = myPrefs.getString("feedbackleftend", "tlm/mqto/");
   switchesAvailable = myPrefs.getBool("switchesavailable", false); // check for panel switches in use
   myPrefs.end();
 }
@@ -401,7 +406,6 @@ void getTurnoutData()
   {
     myPrefs.begin(deviceSpace[i]);
     devName[i] = myPrefs.getString("name", "noname");
-    // Serial.println(devName[i]);
 
     // set the rotational speed using rpm as parameter, defaults to NOMINAL_SPEED
     myStepper[i].setSpeed(myPrefs.getUShort("speed", NOMINAL_SPEED));
@@ -411,11 +415,10 @@ void getTurnoutData()
     // it could be made less through experimentation
     myStepper[i].setStrokeSteps(myPrefs.getUShort("throw", NOMINAL_STROKE));
 
-    // limit the torque, defaults to NOMINAL_TORQUE_INTERVAL
-    // this defines the time in microseconds that current current flow will be shortened in each step
-    // the default is 500, a smaller number provides more torque but consumes more current
-    // at 1000 rpm the step length is 3000 ms for a 20 step/revolution motor
-    myStepper[i].setTorqueLimit(myPrefs.getUShort("force", NOMINAL_TORQUE_INTERVAL));
+    // limit the torque, defaults to NOMINAL_MAX_TORQUE
+    // this defines the percent of nominal step length of each pulse
+    // the default is 100, a smaller number provides less torque and consumes less current on average
+    myStepper[i].setTorqueLimit(myPrefs.getUShort("force", NOMINAL_MAX_TORQUE));
 
     // configure the direction, defaults to false (non-reversed)
     // design assumes device is installed on the closed side of turnout and that turnout is closed
@@ -434,30 +437,19 @@ void setup()
   Serial.begin(115200);
   SPIFFS.begin(true);
 
-  // get the stored configuration values, defaults are the second parameter in the list
   // myPrefs.clear();
-  // myPrefs.begin("general", true);
-  // mqttServer = myPrefs.getString("mqttserver", "192.168.0.9");
-  // topicLeftEnd = myPrefs.getString("leftEnd", "cmd/mqto/");
-  // turnoutFeedbackTopic = myPrefs.getString("feedbackleftend", "tlm/mqto/");
-  // switchesAvailable = myPrefs.getBool("switchesavailable", false); // check for panel switches in use
-  // myPrefs.end();
+
   getGeneralData();
 
   // Configure SSID and password for Captive Portal
-  String SSID = "MQTO";
-  ESPConnect.autoConnect(SSID.c_str()); // TBD use a distinctive unique name, also what is this?
+  // String SSID = "MQTO";
+  SSID = WiFi.macAddress();
+  Serial.println(SSID);
+  ESPConnect.autoConnect(SSID.c_str());
 
   // Begin connecting to previous WiFi or start autoConnect AP if unable to connect
   if (ESPConnect.begin(&server))
-  {
-    // Serial.println("Connected to WiFi");
     Serial.println("IPAddress: " + WiFi.localIP().toString());
-  }
-  // else
-  // {
-  //   Serial.println("Failed to connect to WiFi");
-  // }
 
   // start neoPixels and set all to blue
   // neoPixels must be wired in order of devices, first nP is device 1
@@ -476,7 +468,7 @@ void setup()
             { request->send(SPIFFS, "/index.html", "text/html", false); });
   server.on("/steppers.html", HTTP_GET, [](AsyncWebServerRequest *request)
             { request->send(SPIFFS, "/steppers.html", "text/html", false, processorParms); });
-  server.on("/network.html", HTTP_ANY, [](AsyncWebServerRequest *request)
+  server.on("/network.html", HTTP_GET, [](AsyncWebServerRequest *request)
             { request->send(SPIFFS, "/network.html", "text/html", false, processor); });
   server.on("/", HTTP_GET, [](AsyncWebServerRequest *request)
             { request->send(SPIFFS, "/stylesheet.css", "text/css", false); });
@@ -515,6 +507,8 @@ void setup()
                 myPrefs.putString("mqttserver", mqttServer);
                 topicLeftEnd = request->getParam("topicleftend")->value();
                 myPrefs.putString("leftend", topicLeftEnd);
+                feedbackLeftEnd = request->getParam("feedbackleftend")->value();
+                myPrefs.putString("feedbackleftend", feedbackLeftEnd);
                 myPrefs.end();
                 getGeneralData();
                 request->send(SPIFFS, "/network.html", "text/html", false, processor);
@@ -529,10 +523,7 @@ void setup()
 
   // MQTT
   mqtt.connect(&mqttClient);
-  mqtt.subscribe(&mqttClient, devName[0]);
-  mqtt.subscribe(&mqttClient, devName[1]);
-  mqtt.subscribe(&mqttClient, devName[2]);
-  mqtt.subscribe(&mqttClient, devName[3]);
+  setSubscriptions();
   mqttClient.setCallback(callback);
 }
 
@@ -542,7 +533,7 @@ void loop()
   if (!mqttClient.connected())
   {
     mqtt.connect(&mqttClient);
-    //   setupSubscriptions();
+    setSubscriptions();
   }
 
   mqttClient.loop();

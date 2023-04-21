@@ -3,16 +3,10 @@
 
 <head>
   <link rel="stylesheet" href="stylesheet.css">
-  <title>MQTO Network Parameters</title>
+  <title>MQTO Network Values</title>
   <meta charset="UTF-8">
   <meta name="author" content="George Hofmann">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <script>
-    function submitMessage() {
-      alert("Saved value to ESP SPIFFS");
-      setTimeout(function () { document.location.reload(false); }, 500);
-    }
-  </script>
 </head>
 
 <body>
@@ -25,8 +19,24 @@
   </div>
 
   <div class="content">
-    <h2>MQTT Parameters</h2>
+    <h2>Network and MQTT Values</h2>
 
+    <table>
+      <tr>
+        <td>SSID:</td>
+        <td> %SSID%</td>
+      </tr>
+      <tr>
+        <td>Signal strength: </td>
+        <td> %RSSI%</td>
+      </tr>
+      <tr>
+        <td>MAC address: </td>
+        <td>%MAC%</td>
+      </tr>
+    </table>
+    <hr>
+    <br>
     <p>Assign the following MQTT parameters associated with this node. </p>
 
     <form action="/get">
@@ -39,16 +49,22 @@
 
         <tr>
           <td>MQTT Server IP</td>
-          <td><input type="text" name="mqttserver" value="%MQTTSERVERIPADR%"></td>
+          <td><input type="text" name="mqttserver" value="%MQTTSERVERIPADR%" style="text-align: center;"></td>
         </tr>
 
         <tr>
-          <td>Topic Left End</td>
-          <td><input type="text" name="topicleftend" value="%TOPICLEFTEND%"></td>
+          <td>Command Topic Prefix</td>
+          <td><input type="text" name="topicleftend" value="%TOPICLEFTEND%" style="text-align: center;"></td>
+        </tr>
+        <tr>
+          <td>Feedback Topic Prefix</td>
+          <td><input type="text" name="feedbackleftend" value="%FEEDBACKLEFTEND%" style="text-align: center;"></td>
         </tr>
       </table>
-      <input type="submit" value="Submit">   <input type="reset">
-        </form>
+      <br>
+      <input type="submit" value="Submit"> <input type="reset">
+    </form>
+
   </div>
 
 </body>
