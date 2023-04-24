@@ -21,23 +21,22 @@ A gerber file for the required motherboard PCB is included in this distribution.
 
 This software was developed using VSCode and PlatformIO with 'ESP32 Dev Module' board configuration. Initially it will fail to load into the host because of lack of memory. This is alleviated by modifying the partition scheme. Access that setting from the Arduino Tools menu. Select some scheme that does not use OTA (Over the Air software loading). Choosing this reduced the size from 101% of memory to 42%.
 
-On first start the code will attemp to connect to the default WiFi SSID and will fail. TBD all this
+On first start the code will attemp to connect to the default WiFi SSID and will fail. It will then configure itself as a wifi access point having an SSID equal to its MAC address. The user must connect a wifi device to this access point. The access point web page will list the available wifi networks. The user will select one together with the appropriate password. On subsequent reboots the ESP32 will automatically connect to that wifi access point.
 
-The left hand part of the MQTT topic set in the device must match the corresponding setting in JMRI. The default in JMRI is "/trains/track/turnout/". The leading slash is incorrect, remove it in JMRI. The default topic left hand part in the device is "trains/track/turnout/. This string can be changed using the menu, but it must match the equivalent string in JMRI. The default feedback topic left hand part is "trains/track/sensor/turnout/".
+The left hand part of the MQTT topic set in the device must match the corresponding setting in JMRI. The default in JMRI is "/trains/track/turnout/". The leading slash is incorrect, remove it in JMRI. The default topic left hand part in the device is "cmd/mqto/. This string can be changed using the menu, but it must match the equivalent string in JMRI. The default feedback topic left hand part is "tlm/mqto/".
 
-The complete topic sent to the node must be of the form "\<left hand topic\>\<node name\>/\<device name\>". The node name and device names (4) are configurable from the menu. The complete topic sent from the device to indicate turnout position will be of the form "\<feedback topic left hand part\>/\<node name\>/\<device name\>".
+The complete topic sent to the node must be of the form "\<left hand topic\>\<device name\>". The device names (4) are configurable from the menu. The complete topic sent from the device to indicate turnout position will be of the form "\<feedback topic left hand part\>\<device name\>".
 
 ## Usage
-The software can be loaded onto an ESP32 device using a download tool available from EspressIF (https://www.espressif.com/en/support/download/other-tools).
+The software can be loaded onto an ESP32 device using a download tool available from EspressIF (https://www.espressif.com/en/support/download/other-tools). [More explanation required]
 
 The software is configured using any web browser. The software creates a web server on the ESP32 device. To access the configuration pages the ip address of the device must be known and entered as the URL in the browser. The configuration menu has individual pages for mqtt setup, stepper parameters and over-the-air (OTA) updates of the program firmware and for web page updates.
 
-Meaningful device names should be configured from the menu. The default device name for all 4 devices is "noname". The names must be unique for proper operation.
+Meaningful device names should be configured from the menu. The names must be unique for proper operation.
 
-The stepper motor characteristics may need to be modified from the default values. These include the speed, throw, force and direction. The throw parameter should be set such that the throw is just slightly greater than the amount required to move the points from one stock rail to the other. The force parameter allows for reduction of the force that is exerted. This works by terminating current flow in the motor windings prior to the end of the normal step. The amount is in percent of full force and a value of 75 to 100 has been shown to be effective. Without a reduction the motor may produce enough force to break something. The direction parameter is used to reverse the direction of throw if required to match the physical thrown position to the throw command.
+The stepper motor characteristics may need to be modified from the default values. These include the speed, throw, force and direction. The throw parameter should be set such that the throw is just slightly greater than the amount required to move the points from one stock rail to the other. The force parameter allows for reduction of the force that is exerted. This works by terminating current flow in the motor windings prior to the end of the normal step. The amount is in percent of full force and a value of 75 to 100 has been shown to be effective. Without a reduction the motor may produce enough force to cause damage. The direction parameter is used to reverse the direction of throw if required to match the physical thrown position to the throw command.
 
-## Versioning
-Any change that affects operation increase the version number most significant digit. Any change that corrects an error will increase the version number middle digit. A change that does neither such as correcting a typo will increase the least significant digit.
+
 
 ## Sources
 Possible sources for hardware...

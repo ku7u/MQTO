@@ -98,8 +98,9 @@ uint32_t StepperMRTO::getSpeed()
   return _rpmSpeed;
 }
 
-// set the value for torqueInterval if the default value is not optimum
+// set the value for _forceReductionPercent if the default value is not optimum
 // limiting the interval controls average current and torque
+// 100 is full current
 void StepperMRTO::setTorqueLimit(unsigned long maxStepLengthPercent)
 {
   _forceReductionPercent = maxStepLengthPercent;
@@ -175,16 +176,12 @@ bool StepperMRTO::run(void)
       {
         _currentStep++;
         if (_currentStep == _stepsPerRevolution)
-        {
           _currentStep = 0;
-        }
       }
       else
       {
         if (_currentStep == 0)
-        {
           _currentStep = _stepsPerRevolution;
-        }
         _currentStep--;
       }
 
