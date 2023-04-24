@@ -50,7 +50,7 @@ StepperMRTO::StepperMRTO(int stepsPerRevolution, int motorAPlus, int motorAMinus
   _reversed = false;
   _stepsLeftToGo = 0;
 
-  // Arduino pins for the motor control connection:
+  // pins for the motor control connection:
   _motorAPlus = motorAPlus;
   _motorAMinus = motorAMinus;
   _motorBPlus = motorBPlus;
